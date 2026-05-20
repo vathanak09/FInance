@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="km" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>សៀវភៅលុយ - កម្មវិធីគ្រប់គ្រងហិរញ្ញវត្ថុផ្ទាល់ខ្លួន</title>
+    
+    <!-- Tailwind CSS for sleek utility styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for beautiful iconography -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for beautiful financial analytical visualisations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS for professional Excel exporting -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Google Fonts for professional Khmer and English typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Kantumruy Pro', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#0f172a', // Slate 900
+                        accent: '#059669', // Emerald 600
+                        income: '#10b981', // Emerald 500
+                        expense: '#f43f5e', // Rose 500
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Kantumruy Pro', 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Custom scrollbar for better visual integration */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col md:flex-row overflow-hidden text-slate-800">
+
+    <!-- Custom Toast Notification instead of window.alert() -->
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-y-[-150%] transition-transform duration-300 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center space-x-3 max-w-sm pointer-events-none">
+        <div id="toast-icon-box" class="p-2 bg-emerald-500 rounded-xl text-white">
+            <i id="toast-icon" class="fas fa-check-circle text-lg"></i>
+        </div>
+        <div>
+            <p id="toast-message" class="font-semibold text-sm">ជោគជ័យ!</p>
+        </div>
+    </div>
+
+    <!-- Sidebar Navigation for Desktop -->
+    <aside class="hidden md:flex flex-col w-64 bg-slate-900 text-slate-300 border-r border-slate-800 p-6 flex-shrink-0">
+        <div class="flex items-center space-x-3 mb-8">
+            <div class="h-10 w-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <i class="fa-solid fa-wallet text-white text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-white text-lg tracking-tight">សៀវភៅលុយ</h1>
+                <p class="text-xs text-slate-400">គ្រប់គ្រងហិរញ្ញវត្ថុឆ្លាតវៃ</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 space-y-2">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-200 bg-emerald-500 text-white font-medium">
+                <i class="fa-solid fa-chart-pie text-lg w-6"></i>
+                <span>ផ្ទាំងគ្រប់គ្រង</span>
+            </button>
+            <button onclick="switchTab('transactions')" id="nav-transactions" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-200 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-list-check text-lg w-6"></i>
+                <span>ប្រតិបត្តិការ</span>
+            </button>
+            <button onclick="switchTab('budgets')" id="nav-budgets" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-200 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-bullseye text-lg w-6"></i>
+                <span>ការកំណត់ថវិកា</span>
+            </button>
+            <button onclick="switchTab('categories')" id="nav-categories" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-200 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-tags text-lg w-6"></i>
+                <span>គ្រប់គ្រងប្រភេទ</span>
+            </button>
+        </nav>
+
+        <!-- Sidebar footer & Currency configuration -->
+        <div class="pt-6 border-t border-slate-800">
+            <div class="bg-slate-800/50 p-4 rounded-xl space-y-3">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">រូបិយប័ណ្ណលំនាំដើម</p>
+                <div class="grid grid-cols-2 gap-2 bg-slate-900 p-1 rounded-lg">
+                    <button onclick="setCurrency('USD')" id="currency-usd" class="py-1.5 px-3 rounded text-xs font-bold transition duration-200 bg-emerald-500 text-white">USD ($)</button>
+                    <button onclick="setCurrency('KHR')" id="currency-khr" class="py-1.5 px-3 rounded text-xs font-bold transition duration-200 text-slate-400 hover:text-white">KHR (៛)</button>
+                </div>
+                <div class="text-[10px] text-slate-500 text-center">
+                    អត្រាប្តូរប្រាក់លំនាំដើម: 1$ = 4,100៛
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Mobile top bar header -->
+    <header class="md:hidden bg-slate-900 text-white p-4 flex items-center justify-between shadow-md z-10 flex-shrink-0">
+        <div class="flex items-center space-x-2">
+            <div class="h-8 w-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-wallet text-white text-sm"></i>
+            </div>
+            <h1 class="font-bold text-sm">សៀវភៅលុយ</h1>
+        </div>
+        <div class="flex items-center space-x-3">
+            <select onchange="setCurrency(this.value)" id="currency-selector" class="bg-slate-800 border-none text-white text-xs rounded px-2 py-1 focus:ring-1 focus:ring-emerald-500">
+                <option value="USD">USD ($)</option>
+                <option value="KHR">KHR (៛)</option>
+            </select>
+            <button onclick="openTransactionModal()" class="bg-emerald-500 hover:bg-emerald-600 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1">
+                <i class="fa-solid fa-plus text-[10px]"></i>
+                <span>បន្ថែម</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container Area -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto pb-20 md:pb-0">
+        <!-- Top Toolbar on Desktop -->
+        <header class="hidden md:flex items-center justify-between px-8 py-5 bg-white border-b border-slate-200 flex-shrink-0">
+            <div>
+                <h2 id="page-title" class="text-xl font-bold text-slate-900">ផ្ទាំងគ្រប់គ្រងសង្ខេប</h2>
+                <p id="page-subtitle" class="text-xs text-slate-500 mt-1">ទិដ្ឋភាពរួមនៃស្ថានភាពចំណូលចំណាយរបស់អ្នក</p>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <button onclick="exportExcel()" class="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold flex items-center space-x-2 transition duration-200">
+                    <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i>
+                    <span>នាំចេញរបាយការណ៍ (Excel)</span>
+                </button>
+                <button onclick="openTransactionModal()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-semibold flex items-center space-x-2 shadow-lg shadow-emerald-500/10 transition duration-200">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>បន្ថែមប្រតិបត្តិការ</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- VIEW 1: Dashboard View -->
+        <div id="view-dashboard" class="view-panel p-4 md:p-8 space-y-6 flex-1">
+            
+            <!-- Cards Grid: Income, Expense, Balance -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Net Balance Card -->
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-2xl text-white shadow-xl relative overflow-hidden">
+                    <div class="absolute -right-8 -bottom-8 opacity-10 text-white">
+                        <i class="fa-solid fa-scale-balanced text-[120px]"></i>
+                    </div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-semibold text-slate-400">សមតុល្យលុយសរុប</span>
+                        <span class="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full">សកម្ម</span>
+                    </div>
+                    <h3 id="card-balance" class="text-2xl md:text-3xl font-extrabold tracking-tight">$0.00</h3>
+                    <p class="text-xs text-slate-400 mt-2">ប្រាក់នៅសល់ក្នុងគណនីរបស់អ្នក</p>
+                </div>
+
+                <!-- Income Card -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 opacity-5 text-emerald-600">
+                        <i class="fa-solid fa-circle-arrow-down text-[90px]"></i>
+                    </div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-semibold text-slate-500">ចំណូលសរុប</span>
+                        <div class="h-8 w-8 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600">
+                            <i class="fa-solid fa-circle-arrow-down"></i>
+                        </div>
+                    </div>
+                    <h3 id="card-income" class="text-2xl font-extrabold tracking-tight text-emerald-600">$0.00</h3>
+                    <p class="text-xs text-slate-400 mt-2">លុយរកបានសរុបប្រចាំខែនេះ</p>
+                </div>
+
+                <!-- Expense Card -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 opacity-5 text-rose-600">
+                        <i class="fa-solid fa-circle-arrow-up text-[90px]"></i>
+                    </div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-semibold text-slate-500">ចំណាយសរុប</span>
+                        <div class="h-8 w-8 bg-rose-50 rounded-lg flex items-center justify-center text-rose-600">
+                            <i class="fa-solid fa-circle-arrow-up"></i>
+                        </div>
+                    </div>
+                    <h3 id="card-expense" class="text-2xl font-extrabold tracking-tight text-rose-600">$0.00</h3>
+                    <p class="text-xs text-slate-400 mt-2">លុយចាយវាយសរុបប្រចាំខែនេះ</p>
+                </div>
+            </div>
+
+            <!-- Analytical Charts Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Left Chart: Overview bar chart -->
+                <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[350px]">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="font-bold text-slate-900 text-sm">ប្រៀបធៀបចំណូល និង ចំណាយ</h4>
+                        <span class="text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-500 font-semibold">ប្រចាំខែ</span>
+                    </div>
+                    <div class="flex-1 min-h-0 relative">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Right Chart: Category wise doughnut chart -->
+                <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[350px]">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="font-bold text-slate-900 text-sm">បំណែកការចំណាយតាមប្រភេទ</h4>
+                        <span class="text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-500 font-semibold">ប្រភេទចំណាយ</span>
+                    </div>
+                    <div class="flex-1 min-h-0 relative flex items-center justify-center">
+                        <canvas id="doughnutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Transactions Table Section -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                    <h4 class="font-bold text-slate-900 text-sm">ប្រតិបត្តិការថ្មីៗ</h4>
+                    <button onclick="switchTab('transactions')" class="text-xs text-emerald-600 hover:text-emerald-700 font-semibold flex items-center space-x-1">
+                        <span>មើលទាំងអស់</span>
+                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-400 text-[10px] uppercase font-bold tracking-wider border-b border-slate-100">
+                                <th class="py-3 px-6">កាលបរិច្ឆេទ</th>
+                                <th class="py-3 px-6">ប្រភេទ</th>
+                                <th class="py-3 px-6">ការពិពណ៌នា</th>
+                                <th class="py-3 px-6 text-right">ចំនួនទឹកប្រាក់</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-transactions-tbody" class="divide-y divide-slate-100 text-xs">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: Transactions view -->
+        <div id="view-transactions" class="view-panel p-4 md:p-8 space-y-6 flex-1 hidden">
+            <!-- Filter & Search Panel -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col space-y-4 md:space-y-0 md:flex-row md:items-center md:justify-between md:space-x-4">
+                <div class="flex flex-col md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-3 flex-1">
+                    <!-- Search Field -->
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" id="filter-search" oninput="applyFilters()" placeholder="ស្វែងរកការពិពណ៌នា..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 focus:outline-none focus:border-emerald-500 rounded-xl text-xs">
+                    </div>
+
+                    <!-- Type Selector -->
+                    <select id="filter-type" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-emerald-500">
+                        <option value="all">ប្រភេទទាំងអស់</option>
+                        <option value="income">ចំណូល (+)</option>
+                        <option value="expense">ចំណាយ (-)</option>
+                    </select>
+
+                    <!-- Category Selector -->
+                    <select id="filter-category" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-emerald-500">
+                        <!-- Loaded dynamically -->
+                    </select>
+                </div>
+
+                <!-- Custom Actions -->
+                <div class="flex items-center space-x-2">
+                    <button onclick="exportExcel()" class="md:hidden flex-1 py-2.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 font-semibold rounded-xl text-xs flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-file-excel"></i>
+                        <span>Excel</span>
+                    </button>
+                    <button onclick="openTransactionModal()" class="flex-1 md:flex-none py-2.5 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>បន្ថែមប្រតិបត្តិការ</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Interactive Transactions List -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-400 text-[10px] uppercase font-bold tracking-wider border-b border-slate-100">
+                                <th class="py-3 px-6">កាលបរិច្ឆេទ</th>
+                                <th class="py-3 px-6">ប្រភេទ</th>
+                                <th class="py-3 px-6">ការពិពណ៌នា</th>
+                                <th class="py-3 px-6">លំហូរគណនី</th>
+                                <th class="py-3 px-6 text-right">ចំនួនទឹកប្រាក់</th>
+                                <th class="py-3 px-6 text-center">សកម្មភាព</th>
+                            </tr>
+                        </thead>
+                        <tbody id="all-transactions-tbody" class="divide-y divide-slate-100 text-xs">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 3: Budgets View -->
+        <div id="view-budgets" class="view-panel p-4 md:p-8 space-y-6 flex-1 hidden">
+            <!-- Summary Header of Budgets -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base">កំណត់ដែនកំណត់ថវិកាចំណាយ</h3>
+                    <p class="text-xs text-slate-500 mt-1">គ្រប់គ្រងការចំណាយកុំឱ្យហួសពីផែនការរបស់អ្នក</p>
+                </div>
+                <button onclick="openBudgetModal()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-semibold flex items-center space-x-2 shadow-sm transition duration-200">
+                    <i class="fa-solid fa-circle-plus"></i>
+                    <span>កំណត់ថវិកាថ្មី</span>
+                </button>
+            </div>
+
+            <!-- Budgets Progress Grid -->
+            <div id="budgets-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamically loaded budget cards -->
+            </div>
+        </div>
+
+        <!-- VIEW 4: Categories View -->
+        <div id="view-categories" class="view-panel p-4 md:p-8 space-y-6 flex-1 hidden">
+            <!-- Custom Categories Management Header -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base">ប្រភេទចំណូលចំណាយរបស់អ្នក</h3>
+                    <p class="text-xs text-slate-500 mt-1">រៀបចំ និងរចនាប្រភេទចំណាត់ថ្នាក់តាមតម្រូវការ</p>
+                </div>
+                <button onclick="openCategoryModal()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-semibold flex items-center space-x-2 shadow-sm transition duration-200">
+                    <i class="fa-solid fa-tags"></i>
+                    <span>បង្កើតប្រភេទថ្មី</span>
+                </button>
+            </div>
+
+            <!-- Categories Grid List -->
+            <div id="categories-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <!-- Loaded dynamically via JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 text-slate-400 border-t border-slate-800 flex justify-around py-3 px-4 z-20">
+        <button onclick="switchTab('dashboard')" id="mob-nav-dashboard" class="flex flex-col items-center space-y-1 text-emerald-500">
+            <i class="fa-solid fa-chart-pie text-lg"></i>
+            <span class="text-[9px]">ផ្ទាំងគ្រប់គ្រង</span>
+        </button>
+        <button onclick="switchTab('transactions')" id="mob-nav-transactions" class="flex flex-col items-center space-y-1">
+            <i class="fa-solid fa-list-check text-lg"></i>
+            <span class="text-[9px]">ប្រតិបត្តិការ</span>
+        </button>
+        <button onclick="switchTab('budgets')" id="mob-nav-budgets" class="flex flex-col items-center space-y-1">
+            <i class="fa-solid fa-bullseye text-lg"></i>
+            <span class="text-[9px]">ថវិកា</span>
+        </button>
+        <button onclick="switchTab('categories')" id="mob-nav-categories" class="flex flex-col items-center space-y-1">
+            <i class="fa-solid fa-tags text-lg"></i>
+            <span class="text-[9px]">ប្រភេទ</span>
+        </button>
+    </nav>
+
+    <!-- 1. MODAL: Add / Edit Transaction Dialog -->
+    <div id="transaction-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform scale-95 transition-all duration-300">
+            <!-- Modal Header -->
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <h3 id="transaction-modal-title" class="font-bold text-sm">បន្ថែមប្រតិបត្តិការថ្មី</h3>
+                <button onclick="closeTransactionModal()" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body Form -->
+            <form id="transaction-form" onsubmit="saveTransaction(event)" class="p-6 space-y-4">
+                <input type="hidden" id="transaction-id">
+                
+                <!-- Type Selection Tabs (Income vs Expense) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-2">ប្រភេទលំហូរលុយ</label>
+                    <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-xl">
+                        <button type="button" onclick="setFormType('expense')" id="form-type-expense" class="py-2 px-4 rounded-lg text-xs font-bold text-center transition bg-rose-500 text-white shadow-sm">
+                            <i class="fa-solid fa-circle-arrow-up mr-1"></i> ចំណាយ
+                        </button>
+                        <button type="button" onclick="setFormType('income')" id="form-type-income" class="py-2 px-4 rounded-lg text-xs font-bold text-center transition text-slate-600 hover:text-slate-950">
+                            <i class="fa-solid fa-circle-arrow-down mr-1"></i> ចំណូល
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Amount Input -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1.5">ចំនួនទឹកប្រាក់ (<span class="current-symbol">$</span>)</label>
+                        <input type="number" step="any" id="form-amount" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:outline-none focus:border-emerald-500 rounded-xl text-sm font-semibold">
+                    </div>
+                    <!-- Date Input -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1.5">កាលបរិច្ឆេទ</label>
+                        <input type="date" id="form-date" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:outline-none focus:border-emerald-500 rounded-xl text-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Category Selection Dropdown -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1.5">ប្រភេទចំណាត់ថ្នាក់</label>
+                        <select id="form-category" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:outline-none focus:border-emerald-500 rounded-xl text-sm">
+                            <!-- Populated based on type -->
+                        </select>
+                    </div>
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1.5">ការពិពណ៌នា / ចំណាំ</label>
+                        <input type="text" id="form-description" placeholder="ឧ. ទិញកាហ្វេអាម៉ាហ្សូន" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:outline-none focus:border-emerald-500 rounded-xl text-xs">
+                    </div>
+                </div>
+
+                <!-- Action Button in Footer of modal -->
+                <div class="pt-4 flex space-x-3 border-t border-slate-100">
+                    <button type="button" onclick="closeTransactionModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                        បោះបង់
+                    </button>
+                    <button type="submit" class="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs shadow-lg shadow-emerald-500/10 transition">
+                        រក្សាទុកប្រតិបត្តិការ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. MODAL: Add Custom Category Dialog -->
+    <div id="category-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl transform scale-95 transition-all duration-300">
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <h3 class="font-bold text-sm">បង្កើតប្រភេទចំណូលចំណាយថ្មី</h3>
+                <button onclick="closeCategoryModal()" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <form onsubmit="saveCategory(event)" class="p-6 space-y-4">
+                <!-- Name of Category -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1.5">ឈ្មោះប្រភេទ</label>
+                    <input type="text" id="cat-form-name" placeholder="ឧ. ការកម្សាន្ត, សាំង..." required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:outline-none focus:border-emerald-500 rounded-xl text-xs">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Type of Category -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1.5">ប្រភេទលំហូរ</label>
+                        <select id="cat-form-type" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:outline-none focus:border-emerald-500 rounded-xl text-xs">
+                            <option value="expense">ចំណាយ (-)</option>
+                            <option value="income">ចំណូល (+)</option>
+                        </select>
+                    </div>
+
+                    <!-- Icon Selection picker (FontAwesome Icon classes) -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1.5">ជ្រើសរើសរូបតំណាង</label>
+                        <select id="cat-form-icon" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:outline-none focus:border-emerald-500 rounded-xl text-xs">
+                            <option value="fa-utensils">អាហារ (Utensils)</option>
+                            <option value="fa-bolt">ភ្លើង/ទឹក (Bolt)</option>
+                            <option value="fa-house">ផ្ទះ/ផ្ទះជួល (House)</option>
+                            <option value="fa-car">ឡាន/ម៉ូតូ (Car)</option>
+                            <option value="fa-heart-pulse">សុខភាព (Health)</option>
+                            <option value="fa-graduation-cap">ការសិក្សា (Education)</option>
+                            <option value="fa-film">កម្សាន្ត (Entertainment)</option>
+                            <option value="fa-shirt">សំលៀកបំពាក់ (Clothes)</option>
+                            <option value="fa-briefcase">ការងារ/ប្រាក់ខែ (Work)</option>
+                            <option value="fa-chart-line">ការវិនិយោគ (Invest)</option>
+                            <option value="fa-gift">កាដូ (Gift)</option>
+                            <option value="fa-tags">ផ្សេងៗ (Tags)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Custom Aesthetic Color Selection for category UI background -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-2">ជ្រើសរើសពណ៌លម្អ</label>
+                    <div class="grid grid-cols-5 gap-2" id="cat-color-selector">
+                        <!-- Filled with tailwind colors via javascript -->
+                    </div>
+                    <input type="hidden" id="cat-form-color" value="emerald">
+                </div>
+
+                <div class="pt-4 flex space-x-3 border-t border-slate-100">
+                    <button type="button" onclick="closeCategoryModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                        បោះបង់
+                    </button>
+                    <button type="submit" class="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs shadow-lg shadow-emerald-500/10 transition">
+                        រក្សាទុកប្រភេទ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. MODAL: Create Budget Limit Dialog -->
+    <div id="budget-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl transform scale-95 transition-all duration-300">
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <h3 class="font-bold text-sm">កំណត់ដែនកំណត់ថវិកាថ្មី</h3>
+                <button onclick="closeBudgetModal()" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <form onsubmit="saveBudget(event)" class="p-6 space-y-4">
+                <!-- Target Category -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1.5">សម្រាប់ប្រភេទចំណាយ</label>
+                    <select id="budget-form-category" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:outline-none focus:border-emerald-500 rounded-xl text-xs">
+                        <!-- Only loads Expense categories dynamically -->
+                    </select>
+                </div>
+
+                <!-- Budget Limit Amount -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1.5">ថវិកាអតិបរមា (<span class="current-symbol">$</span>)</label>
+                    <input type="number" step="any" id="budget-form-limit" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:outline-none focus:border-emerald-500 rounded-xl text-sm font-semibold">
+                </div>
+
+                <div class="pt-4 flex space-x-3 border-t border-slate-100">
+                    <button type="button" onclick="closeBudgetModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                        បោះបង់
+                    </button>
+                    <button type="submit" class="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs shadow-lg shadow-emerald-500/10 transition">
+                        កំណត់ថវិកា
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Default Core Categories state
+        const DEFAULT_CATEGORIES = [
+            { id: 'cat-1', name: 'អាហារ និងភេសជ្ជៈ', type: 'expense', icon: 'fa-utensils', color: 'emerald' },
+            { id: 'cat-2', name: 'វិក្កយបត្រ ទឹក ភ្លើង', type: 'expense', icon: 'fa-bolt', color: 'amber' },
+            { id: 'cat-3', name: 'ការស្នាក់នៅ/ផ្ទះជួល', type: 'expense', icon: 'fa-house', color: 'blue' },
+            { id: 'cat-4', name: 'សាំង និងការធ្វើដំណើរ', type: 'expense', icon: 'fa-car', color: 'indigo' },
+            { id: 'cat-5', name: 'សុខភាព និងថ្នាំពេទ្យ', type: 'expense', icon: 'fa-heart-pulse', color: 'rose' },
+            { id: 'cat-6', name: 'ការសិក្សា/អប់រំ', type: 'expense', icon: 'fa-graduation-cap', color: 'violet' },
+            { id: 'cat-7', name: 'កម្សាន្ត/ដើរលេង', type: 'expense', icon: 'fa-film', color: 'pink' },
+            { id: 'cat-8', name: 'ប្រាក់ខែប្រចាំខែ', type: 'income', icon: 'fa-briefcase', color: 'teal' },
+            { id: 'cat-9', name: 'អាជីវកម្មផ្ទាល់ខ្លួន', type: 'income', icon: 'fa-chart-line', color: 'cyan' },
+            { id: 'cat-10', name: 'កាដូ ឬរង្វាន់ផ្សេងៗ', type: 'income', icon: 'fa-gift', color: 'fuchsia' }
+        ];
+
+        // Aesthetic Color palettes Mapping
+        const COLOR_MAPS = {
+            emerald: { bg: 'bg-emerald-500', text: 'text-emerald-500', lightBg: 'bg-emerald-50', border: 'border-emerald-200', hex: '#10b981' },
+            amber: { bg: 'bg-amber-500', text: 'text-amber-500', lightBg: 'bg-amber-50', border: 'border-amber-200', hex: '#f59e0b' },
+            blue: { bg: 'bg-blue-500', text: 'text-blue-500', lightBg: 'bg-blue-50', border: 'border-blue-200', hex: '#3b82f6' },
+            indigo: { bg: 'bg-indigo-500', text: 'text-indigo-500', lightBg: 'bg-indigo-50', border: 'border-indigo-200', hex: '#6366f1' },
+            rose: { bg: 'bg-rose-500', text: 'text-rose-500', lightBg: 'bg-rose-50', border: 'border-rose-200', hex: '#f43f5e' },
+            violet: { bg: 'bg-violet-500', text: 'text-violet-500', lightBg: 'bg-violet-50', border: 'border-violet-200', hex: '#8b5cf6' },
+            pink: { bg: 'bg-pink-500', text: 'text-pink-500', lightBg: 'bg-pink-50', border: 'border-pink-200', hex: '#ec4899' },
+            teal: { bg: 'bg-teal-500', text: 'text-teal-500', lightBg: 'bg-teal-50', border: 'border-teal-200', hex: '#14b8a6' },
+            cyan: { bg: 'bg-cyan-500', text: 'text-cyan-500', lightBg: 'bg-cyan-50', border: 'border-cyan-200', hex: '#06b6d4' },
+            fuchsia: { bg: 'bg-fuchsia-500', text: 'text-fuchsia-500', lightBg: 'bg-fuchsia-50', border: 'border-fuchsia-200', hex: '#d946ef' },
+            slate: { bg: 'bg-slate-500', text: 'text-slate-500', lightBg: 'bg-slate-100', border: 'border-slate-200', hex: '#64748b' }
+        };
+
+        // Rich Default transactions data for a clean presentation first load
+        const DEFAULT_TRANSACTIONS = [
+            { id: 'tx-1', amount: 850, categoryId: 'cat-8', date: '2026-05-01', description: 'ប្រាក់ខែពេញម៉ោង ឧសភា', type: 'income' },
+            { id: 'tx-2', amount: 120, categoryId: 'cat-9', date: '2026-05-05', description: 'លក់ទំនិញអនឡាញបន្ថែម', type: 'income' },
+            { id: 'tx-3', amount: 250, categoryId: 'cat-3', date: '2026-05-02', description: 'បង់ថ្លៃផ្ទះជួលប្រចាំខែ', type: 'expense' },
+            { id: 'tx-4', amount: 25.5, categoryId: 'cat-1', date: '2026-05-10', description: 'ទិញម្ហូបអាហារញ៉ាំប្រចាំសប្តាហ៍', type: 'expense' },
+            { id: 'tx-5', amount: 15.2, categoryId: 'cat-2', date: '2026-05-12', description: 'បង់ថ្លៃទឹកភ្លើង និងអ៊ីនធឺណិត', type: 'expense' },
+            { id: 'tx-6', amount: 8.5, categoryId: 'cat-4', date: '2026-05-14', description: 'ចាក់សាំងម៉ូតូ និងឡាន', type: 'expense' },
+            { id: 'tx-7', amount: 18.25, categoryId: 'cat-7', date: '2026-05-18', description: 'មើលកុន និងញ៉ាំអាហារពេលល្ងាច', type: 'expense' }
+        ];
+
+        // Default Budget structures
+        const DEFAULT_BUDGETS = [
+            { id: 'bg-1', categoryId: 'cat-1', limit: 100 },
+            { id: 'bg-2', categoryId: 'cat-2', limit: 50 },
+            { id: 'bg-3', categoryId: 'cat-4', limit: 40 }
+        ];
+
+        // Global State management variables
+        let state = {
+            transactions: [],
+            categories: [],
+            budgets: [],
+            currency: 'USD', // USD or KHR
+            exchangeRate: 4100, // 1 USD = 4100 KHR
+            activeTab: 'dashboard',
+            formType: 'expense',
+            selectedCatColor: 'emerald'
+        };
+
+        // Charts handles
+        let barChartInstance = null;
+        let doughnutChartInstance = null;
+
+        // Load data from LocalStorage or seed default dummy data
+        function initApp() {
+            const savedTransactions = localStorage.getItem('sbook_transactions');
+            const savedCategories = localStorage.getItem('sbook_categories');
+            const savedBudgets = localStorage.getItem('sbook_budgets');
+            const savedCurrency = localStorage.getItem('sbook_currency');
+
+            state.transactions = savedTransactions ? JSON.parse(savedTransactions) : DEFAULT_TRANSACTIONS;
+            state.categories = savedCategories ? JSON.parse(savedCategories) : DEFAULT_CATEGORIES;
+            state.budgets = savedBudgets ? JSON.parse(savedBudgets) : DEFAULT_BUDGETS;
+            state.currency = savedCurrency ? savedCurrency : 'USD';
+
+            // Set current currency selectors visually
+            updateCurrencyUI();
+            
+            // Build visual dynamic controls
+            renderCategoryColors();
+            populateFilterCategories();
+            
+            // Initialize rendering
+            renderAll();
+        }
+
+        // Save state changes into local storage persistent memory
+        function saveState() {
+            localStorage.setItem('sbook_transactions', JSON.stringify(state.transactions));
+            localStorage.setItem('sbook_categories', JSON.stringify(state.categories));
+            localStorage.setItem('sbook_budgets', JSON.stringify(state.budgets));
+            localStorage.setItem('sbook_currency', state.currency);
+        }
+
+        // Dynamic Currency conversion value format
+        function formatMoney(amount) {
+            if (state.currency === 'USD') {
+                return '$' + parseFloat(amount).toFixed(2);
+            } else {
+                const khrAmount = amount * state.exchangeRate;
+                // Round KHR and add comma delimiters
+                const roundedKhr = Math.round(khrAmount / 100) * 100; // Round to nearest 100៛
+                return roundedKhr.toLocaleString('en-US') + ' ៛';
+            }
+        }
+
+        // Simple Toast indicator system
+        function showNotification(msg, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            const iconBox = document.getElementById('toast-icon-box');
+            const icon = document.getElementById('toast-icon');
+
+            if (!toast || !msgEl || !iconBox || !icon) return;
+
+            msgEl.textContent = msg;
+            if (isSuccess) {
+                iconBox.className = "p-2 bg-emerald-500 rounded-xl text-white";
+                icon.className = "fas fa-check-circle text-lg";
+            } else {
+                iconBox.className = "p-2 bg-rose-500 rounded-xl text-white";
+                icon.className = "fas fa-exclamation-triangle text-lg";
+            }
+
+            toast.classList.remove('translate-y-[-150%]');
+            toast.classList.add('translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0');
+                toast.classList.add('translate-y-[-150%]');
+            }, 3000);
+        }
+
+        // Navigation system
+        function switchTab(tabName) {
+            state.activeTab = tabName;
+            
+            // Hide all views
+            document.querySelectorAll('.view-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            
+            // Show target view panel
+            document.getElementById('view-' + tabName)?.classList.remove('hidden');
+
+            // Reset navigation active selectors styling
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-200 hover:bg-slate-800 hover:text-white";
+            });
+
+            // Set active navigation button styles
+            const desktopNav = document.getElementById('nav-' + tabName);
+            if (desktopNav) {
+                desktopNav.className = "nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-200 bg-emerald-500 text-white font-medium";
+            }
+
+            // Mobile Nav selector highlights
+            document.querySelectorAll('nav.md\\:hidden button').forEach(btn => {
+                btn.className = "flex flex-col items-center space-y-1 text-slate-400";
+            });
+            const mobNav = document.getElementById('mob-nav-' + tabName);
+            if (mobNav) {
+                mobNav.className = "flex flex-col items-center space-y-1 text-emerald-500";
+            }
+
+            // Scroll main container to top
+            const mainContainer = document.querySelector('main');
+            if (mainContainer) mainContainer.scrollTop = 0;
+
+            // Adjust Header text descriptive
+            const titles = {
+                dashboard: { title: 'ផ្ទាំងគ្រប់គ្រងសង្ខេប', subtitle: 'ទិដ្ឋភាពរួមនៃស្ថានភាពចំណូលចំណាយរបស់អ្នក' },
+                transactions: { title: 'ប្រវត្តិប្រតិបត្តិការហិរញ្ញវត្ថុ', subtitle: 'គ្រប់គ្រង ស្វែងរក និងកែសម្រួលប្រតិបត្តិការទាំងអស់' },
+                budgets: { title: 'ការគ្រប់គ្រងដែនកំណត់ថវិកា', subtitle: 'រៀបចំកញ្ចប់ថវិកាកម្រិតខ្ពស់ដើម្បីសន្សំប្រាក់' },
+                categories: { title: 'ការគ្រប់គ្រងប្រភេទចំណូលចំណាយ', subtitle: 'កំណត់កូដពណ៌ និងរូបតំណាងតាមតម្រូវការ' }
+            };
+
+            const pageTitle = document.getElementById('page-title');
+            const pageSubtitle = document.getElementById('page-subtitle');
+            if (pageTitle) pageTitle.textContent = titles[tabName].title;
+            if (pageSubtitle) pageSubtitle.textContent = titles[tabName].subtitle;
+
+            // Trigger targeted chart redraw on tab switch to avoid dimensions collapse
+            if (tabName === 'dashboard') {
+                setTimeout(initCharts, 100);
+            }
+        }
+
+        // Change current currency preference view mode
+        function setCurrency(curr) {
+            state.currency = curr;
+            saveState();
+            updateCurrencyUI();
+            renderAll();
+            showNotification('ប្តូររូបិយប័ណ្ណជា ' + (curr === 'USD' ? 'ដុល្លារ ($)' : 'រៀល (៛)') + ' ជោគជ័យ!');
+        }
+
+        // Update Currency selectors view state
+        function updateCurrencyUI() {
+            // Update symbols inside forms
+            document.querySelectorAll('.current-symbol').forEach(el => {
+                el.textContent = state.currency === 'USD' ? '$' : '៛';
+            });
+
+            // Sidebar and mobile currency switches UI highlight
+            const usdBtn = document.getElementById('currency-usd');
+            const khrBtn = document.getElementById('currency-khr');
+            const mobileSel = document.getElementById('currency-selector');
+
+            if (usdBtn && khrBtn) {
+                if (state.currency === 'USD') {
+                    usdBtn.className = "py-1.5 px-3 rounded text-xs font-bold transition duration-200 bg-emerald-500 text-white";
+                    khrBtn.className = "py-1.5 px-3 rounded text-xs font-bold transition duration-200 text-slate-400 hover:text-white";
+                } else {
+                    usdBtn.className = "py-1.5 px-3 rounded text-xs font-bold transition duration-200 text-slate-400 hover:text-white";
+                    khrBtn.className = "py-1.5 px-3 rounded text-xs font-bold transition duration-200 bg-emerald-500 text-white";
+                }
+            }
+            if (mobileSel) {
+                mobileSel.value = state.currency;
+            }
+        }
+
+        // Populate filter choices
+        function populateFilterCategories() {
+            const filterCat = document.getElementById('filter-category');
+            if (filterCat) {
+                filterCat.innerHTML = '<option value="all">គ្រប់ប្រភេទទាំងអស់</option>';
+                state.categories.forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat.id;
+                    opt.textContent = cat.name + ' (' + (cat.type === 'income' ? '+' : '-') + ')';
+                    filterCat.appendChild(opt);
+                });
+            }
+        }
+
+        // Core compilation of render pipelines
+        function renderAll() {
+            renderDashboardCards();
+            renderRecentTransactions();
+            renderTransactionsList();
+            renderBudgetsList();
+            renderCategoriesList();
+            initCharts();
+        }
+
+        // Compute and render dashboard total KPI figures
+        function renderDashboardCards() {
+            let totalIncome = 0;
+            let totalExpense = 0;
+
+            state.transactions.forEach(tx => {
+                const amt = parseFloat(tx.amount);
+                if (tx.type === 'income') {
+                    totalIncome += amt;
+                } else {
+                    totalExpense += amt;
+                }
+            });
+
+            const netBalance = totalIncome - totalExpense;
+
+            const cardBal = document.getElementById('card-balance');
+            const cardInc = document.getElementById('card-income');
+            const cardExp = document.getElementById('card-expense');
+
+            if (cardBal) cardBal.textContent = formatMoney(netBalance);
+            if (cardInc) cardInc.textContent = formatMoney(totalIncome);
+            if (cardExp) cardExp.textContent = formatMoney(totalExpense);
+
+            // Change Balance background dynamically based on health of cash flow
+            if (cardBal && cardBal.parentElement) {
+                const balCard = cardBal.parentElement;
+                if (netBalance < 0) {
+                    balCard.className = "bg-gradient-to-br from-rose-950 to-slate-900 p-6 rounded-2xl text-white shadow-xl relative overflow-hidden";
+                } else {
+                    balCard.className = "bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-2xl text-white shadow-xl relative overflow-hidden";
+                }
+            }
+        }
+
+        // Render 5 recent transactions
+        function renderRecentTransactions() {
+            const tbody = document.getElementById('recent-transactions-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            // Sort newest first, take top 5
+            const sorted = [...state.transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+
+            if (sorted.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="py-8 text-center text-slate-400">មិនទាន់មានប្រតិបត្តិការណាមួយនៅឡើយទេ</td></tr>';
+                return;
+            }
+
+            sorted.forEach(tx => {
+                const cat = state.categories.find(c => c.id === tx.categoryId) || { name: 'ផ្សេងៗ', icon: 'fa-tags', color: 'slate' };
+                const col = COLOR_MAPS[cat.color] || COLOR_MAPS.emerald;
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition cursor-pointer";
+                tr.onclick = () => { switchTab('transactions'); };
+                tr.innerHTML = `
+                    <td class="py-3 px-6 text-slate-500 font-medium">${formatDisplayDate(tx.date)}</td>
+                    <td class="py-3 px-6">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="h-7 w-7 rounded-lg ${col.lightBg} ${col.text} flex items-center justify-center text-xs">
+                                <i class="fa-solid ${cat.icon}"></i>
+                            </div>
+                            <span class="font-bold text-slate-800">${cat.name}</span>
+                        </div>
+                    </td>
+                    <td class="py-3 px-6 text-slate-600 font-medium">${tx.description}</td>
+                    <td class="py-3 px-6 text-right font-extrabold ${tx.type === 'income' ? 'text-emerald-500' : 'text-rose-500'}">
+                        ${tx.type === 'income' ? '+' : '-'}${formatMoney(tx.amount)}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function formatDisplayDate(dateStr) {
+            const date = new Date(dateStr);
+            const months = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
+            return date.getDate() + ' ' + months[date.getMonth()] + ' ' + date.getFullYear();
+        }
+
+        // Render comprehensive transactions lists with rich filtering operations
+        function renderTransactionsList() {
+            const tbody = document.getElementById('all-transactions-tbody');
+            if (!tbody) return;
+
+            const searchVal = document.getElementById('filter-search')?.value.toLowerCase() || '';
+            const typeVal = document.getElementById('filter-type')?.value || 'all';
+            const catVal = document.getElementById('filter-category')?.value || 'all';
+
+            tbody.innerHTML = '';
+
+            let filtered = [...state.transactions];
+
+            // Filter search description
+            if (searchVal) {
+                filtered = filtered.filter(tx => tx.description.toLowerCase().includes(searchVal));
+            }
+
+            // Filter income/expense
+            if (typeVal !== 'all') {
+                filtered = filtered.filter(tx => tx.type === typeVal);
+            }
+
+            // Filter categories
+            if (catVal !== 'all') {
+                filtered = filtered.filter(tx => tx.categoryId === catVal);
+            }
+
+            // Sort newest first
+            filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="py-12 text-center text-slate-400 font-medium">មិនមានប្រតិបត្តិការស្វែងរកឃើញឡើយ</td></tr>';
+                return;
+            }
+
+            filtered.forEach(tx => {
+                const cat = state.categories.find(c => c.id === tx.categoryId) || { name: 'ផ្សេងៗ', icon: 'fa-tags', color: 'slate' };
+                const col = COLOR_MAPS[cat.color] || COLOR_MAPS.emerald;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 transition duration-150";
+                tr.innerHTML = `
+                    <td class="py-3.5 px-6 text-slate-500 font-semibold">${formatDisplayDate(tx.date)}</td>
+                    <td class="py-3.5 px-6">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="h-8 w-8 rounded-lg ${col.lightBg} ${col.text} flex items-center justify-center text-xs">
+                                <i class="fa-solid ${cat.icon}"></i>
+                            </div>
+                            <span class="font-bold text-slate-800">${cat.name}</span>
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-6 text-slate-600 font-medium">${tx.description}</td>
+                    <td class="py-3.5 px-6">
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${tx.type === 'income' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}">
+                            ${tx.type === 'income' ? 'ចំណូល' : 'ចំណាយ'}
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-6 text-right font-extrabold ${tx.type === 'income' ? 'text-emerald-500' : 'text-rose-500'}">
+                        ${tx.type === 'income' ? '+' : '-'}${formatMoney(tx.amount)}
+                    </td>
+                    <td class="py-3.5 px-6 text-center">
+                        <div class="flex items-center justify-center space-x-2">
+                            <button onclick="editTransaction('${tx.id}')" class="h-7 w-7 text-slate-500 hover:text-emerald-500 hover:bg-emerald-50 rounded transition duration-150 flex items-center justify-center" title="កែប្រែ">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deleteTransaction('${tx.id}')" class="h-7 w-7 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded transition duration-150 flex items-center justify-center" title="លុបចោល">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Apply dynamic interactive filters instantly on inputs change
+        function applyFilters() {
+            renderTransactionsList();
+        }
+
+        // Initialize or update analytical diagrams with Chart.js library
+        function initCharts() {
+            const ctxBar = document.getElementById('barChart');
+            const ctxDoughnut = document.getElementById('doughnutChart');
+
+            if (!ctxBar || !ctxDoughnut) return;
+
+            // Compute dataset points aggregated by category names
+            const expenseMap = {};
+            const incomeMap = {};
+
+            // Default aggregates initialization
+            state.categories.forEach(c => {
+                if (c.type === 'expense') expenseMap[c.name] = 0;
+                else incomeMap[c.name] = 0;
+            });
+
+            state.transactions.forEach(tx => {
+                const cat = state.categories.find(c => c.id === tx.categoryId);
+                if (!cat) return;
+                
+                if (tx.type === 'expense') {
+                    expenseMap[cat.name] = (expenseMap[cat.name] || 0) + parseFloat(tx.amount);
+                } else {
+                    incomeMap[cat.name] = (incomeMap[cat.name] || 0) + parseFloat(tx.amount);
+                }
+            });
+
+            // Clean 0 entries for aesthetic presentation on pie/doughnut chart
+            const doughnutLabels = [];
+            const doughnutData = [];
+            const doughnutColors = [];
+
+            state.categories.filter(c => c.type === 'expense').forEach(c => {
+                const sum = expenseMap[c.name] || 0;
+                if (sum > 0) {
+                    doughnutLabels.push(c.name);
+                    // Convert monetary output if currency exchange settings vary
+                    const visualVal = state.currency === 'USD' ? sum : Math.round(sum * state.exchangeRate);
+                    doughnutData.push(visualVal);
+                    doughnutColors.push(COLOR_MAPS[c.color]?.hex || '#cbd5e1');
+                }
+            });
+
+            // 1. DOUGHNUT CHART setup
+            if (doughnutChartInstance) {
+                doughnutChartInstance.destroy();
+            }
+
+            if (doughnutData.length === 0) {
+                // Empty state visuals custom plugin
+                doughnutChartInstance = new Chart(ctxDoughnut, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['គ្មានទិន្នន័យ'],
+                        datasets: [{ data: [1], backgroundColor: ['#f1f5f9'] }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            } else {
+                doughnutChartInstance = new Chart(ctxDoughnut, {
+                    type: 'doughnut',
+                    data: {
+                        labels: doughnutLabels,
+                        datasets: [{
+                            data: doughnutData,
+                            backgroundColor: doughnutColors,
+                            borderWidth: 0,
+                            hoverOffset: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    font: { family: 'Kantumruy Pro', size: 10 },
+                                    boxWidth: 12,
+                                    padding: 10
+                                }
+                            }
+                        },
+                        cutout: '70%'
+                    }
+                });
+            }
+
+            // 2. BAR CHART configuration
+            // Sum total general flows
+            let totalBarIncome = 0;
+            let totalBarExpense = 0;
+            state.transactions.forEach(tx => {
+                if (tx.type === 'income') totalBarIncome += tx.amount;
+                else totalBarExpense += tx.amount;
+            });
+
+            if (state.currency !== 'USD') {
+                totalBarIncome = Math.round(totalBarIncome * state.exchangeRate);
+                totalBarExpense = Math.round(totalBarExpense * state.exchangeRate);
+            }
+
+            if (barChartInstance) {
+                barChartInstance.destroy();
+            }
+
+            barChartInstance = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['ចំណូល', 'ចំណាយ'],
+                    datasets: [{
+                        label: 'ចំនួនទឹកប្រាក់',
+                        data: [totalBarIncome, totalBarExpense],
+                        backgroundColor: ['#10b981', '#f43f5e'],
+                        borderRadius: 8,
+                        barThickness: 32
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: { family: 'Kantumruy Pro', size: 10 }
+                            },
+                            grid: {
+                                color: '#f1f5f9'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: { family: 'Kantumruy Pro', size: 11, weight: 'bold' }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render and compute real-time progress of monthly budgets
+        function renderBudgetsList() {
+            const container = document.getElementById('budgets-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            // Sum expenses per category
+            const expenseSums = {};
+            state.transactions.forEach(tx => {
+                if (tx.type === 'expense') {
+                    expenseSums[tx.categoryId] = (expenseSums[tx.categoryId] || 0) + parseFloat(tx.amount);
+                }
+            });
+
+            if (state.budgets.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-16 text-center bg-white border border-slate-200 rounded-2xl p-6">
+                        <i class="fa-solid fa-bullseye text-4xl text-slate-300 mb-3"></i>
+                        <p class="text-slate-400 text-xs font-semibold">មិនទាន់មានដែនកំណត់ថវិកាប្រចាំខែឡើយ</p>
+                    </div>
+                `;
+                return;
+            }
+
+            state.budgets.forEach(b => {
+                const cat = state.categories.find(c => c.id === b.categoryId) || { name: 'ផ្សេងៗ', icon: 'fa-tags', color: 'slate' };
+                const spent = expenseSums[b.id] || expenseSums[b.categoryId] || 0;
+                
+                const rawPercent = (spent / b.limit) * 100;
+                const percent = Math.min(Math.round(rawPercent), 100);
+                const remaining = Math.max(0, b.limit - spent);
+
+                // Choose progress colors indicators based on usage warnings
+                let barColor = 'bg-emerald-500';
+                let alertText = 'text-emerald-600';
+                let lightBg = 'bg-emerald-50';
+
+                if (percent >= 90) {
+                    barColor = 'bg-rose-500';
+                    alertText = 'text-rose-600';
+                    lightBg = 'bg-rose-50';
+                } else if (percent >= 75) {
+                    barColor = 'bg-amber-500';
+                    alertText = 'text-amber-600';
+                    lightBg = 'bg-amber-50';
+                }
+
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 flex flex-col relative";
+                card.innerHTML = `
+                    <!-- Close button to remove budget limits -->
+                    <button onclick="deleteBudget('${b.id}')" class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition duration-150">
+                        <i class="fa-solid fa-circle-xmark text-lg"></i>
+                    </button>
+
+                    <div class="flex items-center space-x-3">
+                        <div class="h-10 w-10 rounded-xl ${(COLOR_MAPS[cat.color]?.lightBg || 'bg-slate-100')} ${(COLOR_MAPS[cat.color]?.text || 'text-slate-600')} flex items-center justify-center text-sm">
+                            <i class="fa-solid ${cat.icon}"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm">${cat.name}</h4>
+                            <p class="text-[10px] text-slate-400">ដែនកំណត់ប្រចាំខែ</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span class="text-slate-500">បានចំណាយ</span>
+                            <span class="text-slate-900">${formatMoney(spent)} / ${formatMoney(b.limit)}</span>
+                        </div>
+                        
+                        <!-- Visual indicator progress track bar -->
+                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                            <div class="${barColor} h-full transition-all duration-500" style="width: ${percent}%"></div>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-2">
+                            <span class="text-[10px] ${alertText} font-bold px-2 py-0.5 rounded-md ${lightBg}">
+                                ${percent}% នៃដែនកំណត់
+                            </span>
+                            <span class="text-[10px] text-slate-400 font-semibold">នៅសល់: <strong class="text-slate-700">${formatMoney(remaining)}</strong></span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Categories list layout rendering
+        function renderCategoriesList() {
+            const container = document.getElementById('categories-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            state.categories.forEach(cat => {
+                const col = COLOR_MAPS[cat.color] || COLOR_MAPS.emerald;
+                
+                const item = document.createElement('div');
+                item.className = 'p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col items-center justify-center text-center space-y-2.5 relative group hover:shadow-md transition duration-200';
+                item.innerHTML = `
+                    <button onclick="deleteCategory('${cat.id}')" class="absolute top-2 right-2 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition duration-150 text-xs">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                    <div class="h-11 w-11 rounded-full ${col.lightBg} ${col.text} flex items-center justify-center text-base">
+                        <i class="fa-solid ${cat.icon}"></i>
+                    </div>
+                    <div class="space-y-0.5">
+                        <p class="font-bold text-slate-800 text-xs">${cat.name}</p>
+                        <p class="text-[9px] font-semibold tracking-wider uppercase text-slate-400">${cat.type === 'income' ? 'ចំណូល' : 'ចំណាយ'}</p>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Renders custom color grids inside add custom category form
+        function renderCategoryColors() {
+            const container = document.getElementById('cat-color-selector');
+            if (!container) return;
+            container.innerHTML = '';
+
+            Object.keys(COLOR_MAPS).forEach(colName => {
+                const block = document.createElement('button');
+                block.type = "button";
+                block.onclick = () => selectCategoryColor(colName);
+                block.className = 'h-8 w-full rounded-lg ' + COLOR_MAPS[colName].bg + ' flex items-center justify-center border-2 transition duration-150 ' + (state.selectedCatColor === colName ? 'border-slate-900 scale-105' : 'border-transparent');
+                block.innerHTML = state.selectedCatColor === colName ? '<i class="fa-solid fa-check text-white text-xs"></i>' : '';
+                container.appendChild(block);
+            });
+        }
+
+        // Select specific custom category color
+        function selectCategoryColor(colName) {
+            state.selectedCatColor = colName;
+            const el = document.getElementById('cat-form-color');
+            if (el) el.value = colName;
+            renderCategoryColors();
+        }
+
+        // Modal management controls
+        function openTransactionModal() {
+            const txIdEl = document.getElementById('transaction-id');
+            const titleEl = document.getElementById('transaction-modal-title');
+            const dateEl = document.getElementById('form-date');
+            const amountEl = document.getElementById('form-amount');
+            const descEl = document.getElementById('form-description');
+
+            if (txIdEl) txIdEl.value = '';
+            if (titleEl) titleEl.textContent = 'បន្ថែមប្រតិបត្តិការថ្មី';
+            
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            if (dateEl) dateEl.value = today;
+            if (amountEl) amountEl.value = '';
+            if (descEl) descEl.value = '';
+
+            // Render type tab UI and dropdown options
+            setFormType('expense');
+
+            document.getElementById('transaction-modal')?.classList.remove('hidden');
+        }
+
+        function closeTransactionModal() {
+            document.getElementById('transaction-modal')?.classList.add('hidden');
+        }
+
+        // Set form type (income vs expense)
+        function setFormType(type) {
+            state.formType = type;
+            const expBtn = document.getElementById('form-type-expense');
+            const incBtn = document.getElementById('form-type-income');
+
+            if (expBtn && incBtn) {
+                if (type === 'expense') {
+                    expBtn.className = "py-2 px-4 rounded-lg text-xs font-bold text-center transition bg-rose-500 text-white shadow-sm";
+                    incBtn.className = "py-2 px-4 rounded-lg text-xs font-bold text-center transition text-slate-600 hover:text-slate-950";
+                } else {
+                    incBtn.className = "py-2 px-4 rounded-lg text-xs font-bold text-center transition bg-emerald-500 text-white shadow-sm";
+                    expBtn.className = "py-2 px-4 rounded-lg text-xs font-bold text-center transition text-slate-600 hover:text-slate-950";
+                }
+            }
+
+            // Populate category selector matching types
+            const dropdown = document.getElementById('form-category');
+            if (dropdown) {
+                dropdown.innerHTML = '';
+                const filteredCats = state.categories.filter(c => c.type === type);
+                filteredCats.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    dropdown.appendChild(opt);
+                });
+            }
+        }
+
+        // Save Transaction record handler
+        function saveTransaction(e) {
+            e.preventDefault();
+
+            const txId = document.getElementById('transaction-id')?.value;
+            const amountInput = parseFloat(document.getElementById('form-amount')?.value);
+            const dateInput = document.getElementById('form-date')?.value;
+            const catIdInput = document.getElementById('form-category')?.value;
+            const descInput = document.getElementById('form-description')?.value;
+
+            if (isNaN(amountInput) || amountInput <= 0) {
+                showNotification('សូមបញ្ចូលចំនួនទឹកប្រាក់ឲ្យបានត្រឹមត្រូវ!', false);
+                return;
+            }
+
+            if (txId) {
+                // Edit mode
+                const index = state.transactions.findIndex(t => t.id === txId);
+                if (index !== -1) {
+                    state.transactions[index] = {
+                        id: txId,
+                        amount: amountInput,
+                        categoryId: catIdInput,
+                        date: dateInput,
+                        description: descInput,
+                        type: state.formType
+                    };
+                    showNotification('កែសម្រួលប្រតិបត្តិការរួចរាល់!');
+                }
+            } else {
+                // Add new transaction
+                const newTx = {
+                    id: 'tx-' + Date.now(),
+                    amount: amountInput,
+                    categoryId: catIdInput,
+                    date: dateInput,
+                    description: descInput,
+                    type: state.formType
+                };
+                state.transactions.push(newTx);
+                showNotification('បន្ថែមប្រតិបត្តិការថ្មីដោយជោគជ័យ!');
+            }
+
+            saveState();
+            closeTransactionModal();
+            renderAll();
+        }
+
+        // Edit transaction trigger mapping values back to input
+        function editTransaction(id) {
+            const tx = state.transactions.find(t => t.id === id);
+            if (!tx) return;
+
+            const txIdEl = document.getElementById('transaction-id');
+            const titleEl = document.getElementById('transaction-modal-title');
+            const amountEl = document.getElementById('form-amount');
+            const dateEl = document.getElementById('form-date');
+            const descEl = document.getElementById('form-description');
+            const catEl = document.getElementById('form-category');
+
+            if (txIdEl) txIdEl.value = tx.id;
+            if (titleEl) titleEl.textContent = 'កែសម្រួលប្រតិបត្តិការ';
+            if (amountEl) amountEl.value = tx.amount;
+            if (dateEl) dateEl.value = tx.date;
+            if (descEl) descEl.value = tx.description;
+
+            // Trigger selector setup before value assignment
+            setFormType(tx.type);
+            if (catEl) catEl.value = tx.categoryId;
+
+            document.getElementById('transaction-modal')?.classList.remove('hidden');
+        }
+
+        // Delete transaction handler
+        function deleteTransaction(id) {
+            if (confirm('តើអ្នកពិតជាចង់លុបចោលប្រតិបត្តិការនេះមែនទេ?')) {
+                state.transactions = state.transactions.filter(t => t.id !== id);
+                saveState();
+                renderAll();
+                showNotification('លុបប្រតិបត្តិការដោយជោគជ័យ!', false);
+            }
+        }
+
+        // Custom budget limits creation modal managers
+        function openBudgetModal() {
+            const select = document.getElementById('budget-form-category');
+            if (select) {
+                select.innerHTML = '';
+                // Only expense options allowed for custom budgets limits
+                const expenseCats = state.categories.filter(c => c.type === 'expense');
+                expenseCats.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    select.appendChild(opt);
+                });
+            }
+
+            const limitEl = document.getElementById('budget-form-limit');
+            if (limitEl) limitEl.value = '';
+            document.getElementById('budget-modal')?.classList.remove('hidden');
+        }
+
+        // Close budget modal
+        function closeBudgetModal() {
+            document.getElementById('budget-modal')?.classList.add('hidden');
+        }
+
+        function saveBudget(e) {
+            e.preventDefault();
+
+            const catId = document.getElementById('budget-form-category')?.value;
+            const limitVal = parseFloat(document.getElementById('budget-form-limit')?.value);
+
+            if (isNaN(limitVal) || limitVal <= 0) {
+                showNotification('សូមបញ្ចូលចំនួនទឹកប្រាក់ឱ្យបានត្រឹមត្រូវ!', false);
+                return;
+            }
+
+            // Check if budget already exist for category
+            const existIndex = state.budgets.findIndex(b => b.categoryId === catId);
+            if (existIndex !== -1) {
+                state.budgets[existIndex].limit = limitVal;
+                showNotification('កែសម្រួលដែនកំណត់ថវិការួចរាល់!');
+            } else {
+                const newBudget = {
+                    id: 'bg-' + Date.now(),
+                    categoryId: catId,
+                    limit: limitVal
+                };
+                state.budgets.push(newBudget);
+                showNotification('បានកំណត់ដែនកំណត់ថវិកាថ្មី!');
+            }
+
+            saveState();
+            closeBudgetModal();
+            renderAll();
+        }
+
+        function deleteBudget(id) {
+            if (confirm('តើអ្នកចង់លុបដែនកំណត់ថវិកានេះចេញមែនទេ?')) {
+                state.budgets = state.budgets.filter(b => b.id !== id);
+                saveState();
+                renderAll();
+                showNotification('លុបដែនកំណត់ថវិកាជោគជ័យ!', false);
+            }
+        }
+
+        // Custom Category addition forms
+        function openCategoryModal() {
+            const nameEl = document.getElementById('cat-form-name');
+            const typeEl = document.getElementById('cat-form-type');
+            const iconEl = document.getElementById('cat-form-icon');
+
+            if (nameEl) nameEl.value = '';
+            if (typeEl) typeEl.value = 'expense';
+            if (iconEl) iconEl.value = 'fa-tags';
+            
+            selectCategoryColor('emerald');
+            document.getElementById('category-modal')?.classList.remove('hidden');
+        }
+
+        function closeCategoryModal() {
+            document.getElementById('category-modal')?.classList.add('hidden');
+        }
+
+        function saveCategory(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('cat-form-name')?.value;
+            const type = document.getElementById('cat-form-type')?.value;
+            const icon = document.getElementById('cat-form-icon')?.value;
+            const color = document.getElementById('cat-form-color')?.value;
+
+            const newCat = {
+                id: 'cat-' + Date.now(),
+                name,
+                type,
+                icon,
+                color
+            };
+
+            state.categories.push(newCat);
+            saveState();
+            populateFilterCategories();
+            closeCategoryModal();
+            renderAll();
+            showNotification('បានបង្កើតប្រភេទថ្មីជោគជ័យ!');
+        }
+
+        function deleteCategory(id) {
+            // Check if default categories or in use
+            const isProtected = DEFAULT_CATEGORIES.some(c => c.id === id);
+            if (isProtected) {
+                showNotification('មិនអាចលុបប្រភេទលំនាំដើមរបស់ប្រព័ន្ធបានឡើយ!', false);
+                return;
+            }
+
+            const inUse = state.transactions.some(tx => tx.categoryId === id);
+            if (inUse) {
+                showNotification('មិនអាចលុបប្រភេទនេះបានឡើយ ព្រោះកំពុងត្រូវបានប្រើប្រាស់ដោយប្រតិបត្តិការ!', false);
+                return;
+            }
+
+            if (confirm('តើអ្នកចង់លុបប្រភេទចំណាត់ថ្នាក់នេះមែនទេ?')) {
+                state.categories = state.categories.filter(c => c.id !== id);
+                saveState();
+                populateFilterCategories();
+                renderAll();
+                showNotification('លុបប្រភេទចេញរួចរាល់!', false);
+            }
+        }
+
+        // Export data to MS Excel Spreadsheet format (.xlsx)
+        function exportExcel() {
+            try {
+                if (state.transactions.length === 0) {
+                    showNotification('មិនមានប្រតិបត្តិការដើម្បីនាំចេញឡើយ!', false);
+                    return;
+                }
+
+                // Calculate summary KPIs
+                let totalIncome = 0;
+                let totalExpense = 0;
+                state.transactions.forEach(tx => {
+                    const amt = parseFloat(tx.amount);
+                    if (tx.type === 'income') totalIncome += amt;
+                    else totalExpense += amt;
+                });
+                const netBalance = totalIncome - totalExpense;
+
+                // 1. Create Summary Worksheet
+                const summaryData = [
+                    ["របាយការណ៍ហិរញ្ញវត្ថុផ្ទាល់ខ្លួន - សៀវភៅលុយ"],
+                    ["កាលបរិច្ឆេទនាំចេញ", new Date().toLocaleDateString('km-KH')],
+                    ["រូបិយប័ណ្ណលំនាំដើម", state.currency],
+                    [],
+                    ["សេចក្តីសង្ខេបហិរញ្ញវត្ថុ", ""],
+                    ["ចំណូលសរុប", state.currency === 'USD' ? totalIncome : Math.round(totalIncome * state.exchangeRate)],
+                    ["ចំណាយសរុប", state.currency === 'USD' ? totalExpense : Math.round(totalExpense * state.exchangeRate)],
+                    ["សមតុល្យលុយសរុប", state.currency === 'USD' ? netBalance : Math.round(netBalance * state.exchangeRate)]
+                ];
+
+                const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+
+                // 2. Create Transactions list Worksheet
+                const txHeader = ["កាលបរិច្ឆេទ", "ប្រភេទលំហូរ", "ប្រភេទចំណាត់ថ្នាក់", "ការពិពណ៌នា", "ចំនួនទឹកប្រាក់ (" + state.currency + ")"];
+                const txRows = state.transactions.map(tx => {
+                    const cat = state.categories.find(c => c.id === tx.categoryId) || { name: 'ផ្សេងៗ' };
+                    const actualAmount = state.currency === 'USD' ? tx.amount : Math.round(tx.amount * state.exchangeRate);
+                    return [
+                        tx.date,
+                        tx.type === 'income' ? 'ចំណូល (+)' : 'ចំណាយ (-)',
+                        cat.name,
+                        tx.description,
+                        actualAmount
+                    ];
+                });
+
+                const wsTransactions = XLSX.utils.aoa_to_sheet([txHeader, ...txRows]);
+
+                // Create a Workbook
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, wsSummary, "សេចក្តីសង្ខេបហិរញ្ញវត្ថុ");
+                XLSX.utils.book_append_sheet(wb, wsTransactions, "បញ្ជីប្រតិបត្តិការលម្អិត");
+
+                // Generate and download the file
+                const currentDate = new Date().toISOString().split('T')[0];
+                XLSX.writeFile(wb, "SBook_Financial_Report_" + currentDate + ".xlsx");
+                
+                showNotification('នាំចេញឯកសារ Excel (.xlsx) ជោគជ័យ!');
+            } catch (error) {
+                console.error(error);
+                showNotification('មានបញ្ហាក្នុងការនាំចេញឯកសារ Excel!', false);
+            }
+        }
+
+        // STARTUP initialize execution
+        window.onload = function() {
+            initApp();
+        };
+    </script>
+</body>
+</html>
